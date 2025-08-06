@@ -107,11 +107,12 @@ bool checkMemoryHealth() {
 void sendSystemStats() {
   size_t freeHeap = ESP.getFreeHeap();
   unsigned long uptime = millis() - bootTime;
+  time_t now = time(nullptr);
 
   char payload[200];
   snprintf(payload, sizeof(payload),
-           "{\"type\":\"system\",\"uptime\":%lu,\"free_heap\":%d,\"wifi_rssi\":%d,\"sensor_errors\":%d}",
-           uptime / 1000, freeHeap, WiFi.RSSI(), sensorErrorCount);
+           "{\"type\":\"system\",\"timestamp\":%ld,\"uptime\":%lu,\"free_heap\":%d,\"wifi_rssi\":%d,\"sensor_errors\":%d}",
+           now, uptime / 1000, freeHeap, WiFi.RSSI(), sensorErrorCount);
 
   if (client.connected()) {
     String systemTopic = String(mqtt_topic) + "/system";
@@ -125,8 +126,9 @@ void safeRestart(const char *reason) {
 
   // 緊急ログを送信
   if (client.connected()) {
-    char payload[100];
-    snprintf(payload, sizeof(payload), "{\"type\":\"restart\",\"reason\": \"%s\"}", reason);
+    time_t now = time(nullptr);
+    char payload[150];
+    snprintf(payload, sizeof(payload), "{\"type\":\"restart\",\"timestamp\":%ld,\"reason\":\"%s\"}", now, reason);
     String alertTopic = String(mqtt_topic) + "/alert";
     client.publish(alertTopic.c_str(), payload);
     client.loop();
@@ -325,21 +327,13 @@ void reconnect() {
 // ===========================
 // 現在の時刻・CO2・温度・湿度をMQTTで送信
 void sendSensorData() {
-  struct tm timeinfo;
-  char timeStr[20];
+  time_t now = time(nullptr);
 
-  // 現在時刻を取得し、文字列に変換
-  if (!getLocalTime(&timeinfo)) {
-    strcpy(timeStr, "00:00:00");
-  } else {
-    strftime(timeStr, sizeof(timeStr), "%H:%M:%S", &timeinfo);
-  }
-
-  // JSON形式でデータを作成
+  // JSON形式でデータを作成（UNIXタイムスタンプを使用）
   char payload[150];
   snprintf(payload, sizeof(payload),
-           "{\"time\":\"%s\",\"co2\":%d,\"temp\":%.1f,\"hum\":%.1f}",
-           timeStr, current_co2, current_temp, current_humidity);
+           "{\"timestamp\":%ld,\"co2\":%d,\"temp\":%.1f,\"hum\":%.1f}",
+           now, current_co2, current_temp, current_humidity);
 
   // MQTTで送信
   if (client.publish(mqtt_topic, payload)) {

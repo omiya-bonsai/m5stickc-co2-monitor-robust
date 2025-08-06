@@ -72,12 +72,14 @@ Arduino IDEでプログラムをコンパイル・書き込みしてください
 
 ## データ形式
 
+すべての時刻データは**UNIXタイムスタンプ**（1970年1月1日からの秒数）で送信されます。
+
 ### センサーデータ
 MQTTで送信されるセンサーデータはJSON形式です：
 
 ```json
 {
-  "time": "14:30:15",
+  "timestamp": 1704067200,
   "co2": 450,
   "temp": 23.5,
   "hum": 55.2
@@ -88,6 +90,7 @@ MQTTで送信されるセンサーデータはJSON形式です：
 ```json
 {
   "type": "system",
+  "timestamp": 1704067200,
   "uptime": 86400,
   "free_heap": 180000,
   "wifi_rssi": -45,
@@ -99,9 +102,30 @@ MQTTで送信されるセンサーデータはJSON形式です：
 ```json
 {
   "type": "restart",
+  "timestamp": 1704067200,
   "reason": "Scheduled restart"
 }
 ```
+
+### データフィールド説明
+
+#### 共通フィールド
+- `timestamp`: UNIXタイムスタンプ（UTC基準）
+- `type`: データ種別（"system", "restart"）
+
+#### センサーデータフィールド
+- `co2`: CO2濃度（ppm）
+- `temp`: 温度（摂氏）
+- `hum`: 湿度（%RH）
+
+#### システム統計フィールド
+- `uptime`: 起動からの経過時間（秒）
+- `free_heap`: 空きヒープメモリ（バイト）
+- `wifi_rssi`: WiFi信号強度（dBm）
+- `sensor_errors`: センサーエラー回数
+
+#### 再起動ログフィールド
+- `reason`: 再起動理由（文字列）
 
 ## MQTTトピック
 
@@ -130,6 +154,30 @@ MQTTで送信されるセンサーデータはJSON形式です：
 3. **監視**: MQTT経由でのリモート監視体制を構築
 4. **ログ収集**: システム統計とアラートの定期的な確認
 5. **メンテナンス**: センサーの定期的な校正・清掃
+
+### データ活用のヒント
+
+#### 時系列データベース連携
+- **InfluxDB**: UNIXタイムスタンプを直接インポート可能
+- **Grafana**: リアルタイムグラフ化とアラート設定
+- **MQTT Bridge**: Node-REDやHome Assistantとの連携
+
+#### UNIXタイムスタンプの利点
+- **国際対応**: タイムゾーンに依存しない
+- **計算効率**: 時間差計算が高速
+- **データベース親和性**: 標準的な時刻形式
+- **API連携**: 多くのWebサービスで対応
+
+#### 監視クエリ例
+```sql
+-- 過去1時間の平均CO2濃度（InfluxDB）
+SELECT MEAN(co2) FROM sensor_data 
+WHERE time >= now() - 1h
+
+-- システム健全性チェック
+SELECT * FROM system_stats 
+WHERE timestamp > unix_timestamp() - 300
+```
 
 ## トラブルシューティング
 
