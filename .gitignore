@@ -1,0 +1,19 @@
+# 個人情報を含む設定ファイルをGitから除外
+config.h
+
+# コンパイル済みファイル
+*.bin
+*.hex
+*.elf
+
+# IDEファイル
+.vscode/
+*.code-workspace
+
+# macOS
+.DS_Store
+
+# 一時ファイル
+*.tmp
+*.log
+
