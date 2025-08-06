@@ -6,6 +6,9 @@ M5StickC Plus2とCO2センサーを使用した24/7運用対応の環境監視�
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+![IMG_7571](https://github.com/user-attachments/assets/8ef4459b-5003-4dba-85d8-cfdb324635ee)
+
+
 ## 機能
 
 ### 基本機能
